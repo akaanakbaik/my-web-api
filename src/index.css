@@ -1,25 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .wave-text {
-    background: linear-gradient(to right, #000 20%, #5E17EB 40%, #FF66C4 60%, #000 80%);
-    background-size: 200% auto;
-    color: #000;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shine 2s linear infinite;
-  }
-}
-
-@keyframes shine {
-  to { background-position: 200% center; }
-}
-
 body {
-  background-color: #f3f4f6;
-  color: #000;
+  background-color: #E0E7FF; /* neo-bg */
+  color: #121212;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   overflow-x: hidden;
+}
+
+/* Custom Scrollbar yang rapi */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #121212;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5471FF;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
 }
