@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .wave-text {
+    background: linear-gradient(to right, #000 20%, #5E17EB 40%, #FF66C4 60%, #000 80%);
+    background-size: 200% auto;
+    color: #000;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 2s linear infinite;
+  }
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+body {
+  background-color: #f3f4f6;
+  color: #000;
+  overflow-x: hidden;
+}
