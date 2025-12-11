@@ -22,12 +22,17 @@ const YTDL = () => {
     setLoading(true);
     setData(null);
     setSpeed(null);
-    const toastId = toast.loading("Sedang memproses media...");
+    
+    const toastId = toast.loading("Sedang memproses media (Mohon tunggu)...");
     const startTime = Date.now();
 
     try {
       const endpoint = type === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4';
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`, { params: { url } });
+      
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`, { 
+        params: { url },
+        timeout: 300000 // 5 Menit Timeout (FIX ISU SERVER SIBUK)
+      });
 
       if (response.data.status) {
         setData(response.data);
@@ -37,7 +42,14 @@ const YTDL = () => {
         toast.error(response.data.message || "Gagal mengambil data.", { id: toastId });
       }
     } catch (err) {
-      toast.error("Server sedang sibuk/down.", { id: toastId });
+      console.error(err);
+      if (err.code === 'ECONNABORTED') {
+        toast.error("Waktu habis! Video terlalu panjang/besar.", { id: toastId });
+      } else if (err.response) {
+        toast.error(`Server Error: ${err.response.status}`, { id: toastId });
+      } else {
+        toast.error("Koneksi terputus. Coba refresh.", { id: toastId });
+      }
     } finally {
       setLoading(false);
     }
@@ -57,13 +69,16 @@ const YTDL = () => {
   return (
     <div className="min-h-screen bg-neo-bg p-4 font-mono pb-20">
       <div className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between pt-4">
-          <Link to="/" className="bg-white border-2 border-black p-2 shadow-neo-sm hover:translate-x-1 transition-transform"><ArrowLeft size={20}/></Link>
-          <h1 className="text-2xl md:text-4xl font-black uppercase">YTDL STATION</h1>
-          <div className="w-10"></div> {/* Spacer */}
+        <div className="flex items-center gap-4 pt-4 mb-8">
+          <Link to="/" className="bg-white border-2 border-black p-3 shadow-neo hover:translate-x-1 transition-transform flex-shrink-0">
+             <ArrowLeft size={24} strokeWidth={3}/>
+          </Link>
+          <div>
+             <h1 className="text-3xl md:text-5xl font-black uppercase leading-none">YTDL STATION</h1>
+             <p className="text-sm font-bold text-gray-500">Fastest Downloader Engine</p>
+          </div>
         </div>
 
-        {/* INPUT CARD */}
         <NeoCard className="bg-white" step="1">
            <label className="text-sm font-bold text-gray-600 mb-1 block">Paste YouTube Link</label>
            <NeoInput 
@@ -83,11 +98,10 @@ const YTDL = () => {
            </div>
 
            <NeoButton onClick={handleDownload} variant="blue" fullWidth disabled={loading}>
-             {loading ? <Loader2 className="animate-spin" /> : 'PROSES SEKARANG'}
+             {loading ? <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> <span>PROCESSING...</span></div> : 'PROSES SEKARANG'}
            </NeoButton>
         </NeoCard>
 
-        {/* RESULT CARD */}
         {data && (
           <NeoCard className="bg-[#f0f9ff] border-blue-500 animate-slide-up" step="2">
             <div className="bg-black border-2 border-black mb-4 shadow-neo">
@@ -109,8 +123,8 @@ const YTDL = () => {
                 <span className="font-bold text-right truncate w-1/2">{data.metadata.title}</span>
               </div>
               <div className="flex justify-between border-b border-black pb-1">
-                <span className="font-bold text-gray-500">Size</span>
-                <span className="font-bold">{data.metadata.size_formatted}</span>
+                <span className="font-bold text-gray-500">Engine</span>
+                <span className="font-bold text-blue-600">{data.metadata.engine}</span>
               </div>
             </div>
 
