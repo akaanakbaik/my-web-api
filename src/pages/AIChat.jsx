@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, ArrowLeft, RefreshCw, MoreVertical } from 'lucide-react';
+import { Send, ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -8,30 +8,18 @@ const AIChat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [model, setModel] = useState('kaai-cplt');
   const bottomRef = useRef(null);
 
-  const API_BASE_URL = "https://apiai.akadev.me"; 
-
   const getCurrentTime = () => {
-    return new Date().toLocaleTimeString('id-ID', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false
-    });
+    return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
   };
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    let greeting = 'Halo';
-    if (hour >= 4 && hour < 11) greeting = 'Selamat Pagi';
-    else if (hour >= 11 && hour < 15) greeting = 'Selamat Siang';
-    else if (hour >= 15 && hour < 18) greeting = 'Selamat Sore';
-    else greeting = 'Selamat Malam';
-    
     setMessages([{
       id: 1,
       role: 'ai',
-      text: `${greeting}! Saya Kaai, asisten AI kamu. Ada yang bisa dibantu?`,
+      text: `Halo! Saya Kaai v1.0.2. Ada yang bisa dibantu?`,
       time: getCurrentTime()
     }]);
   }, []);
@@ -44,94 +32,73 @@ const AIChat = () => {
     if (!input.trim()) return;
     const userText = input;
     setInput('');
-    
-    setMessages(prev => [...prev, { 
-      id: Date.now(), 
-      role: 'user', 
-      text: userText, 
-      time: getCurrentTime() 
-    }]);
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: userText, time: getCurrentTime() }]);
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/ai`, { query: userText });
-      const replyText = response.data.status ? response.data.result : "Maaf, server sedang sibuk.";
-
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'ai',
-        text: replyText,
-        time: getCurrentTime()
-      }]);
+      const { data } = await axios.post('/api/ai', { query: userText, model: model });
+      const reply = data.status ? data.result : data.message;
+      setMessages(prev => [...prev, { id: Date.now()+1, role: 'ai', text: reply, time: getCurrentTime() }]);
     } catch (error) {
-      toast.error("Gagal terhubung ke AI");
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'ai',
-        text: "Koneksi terputus. Silakan coba lagi.",
-        time: getCurrentTime()
-      }]);
+      setMessages(prev => [...prev, { id: Date.now()+1, role: 'ai', text: "Koneksi Error.", time: getCurrentTime() }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#e5ddd5] font-sans overflow-hidden relative">
+    <div className="flex flex-col h-[100dvh] bg-[#e5ddd5] font-sans relative">
       <div className="flex-none px-4 py-3 bg-[#202c33] text-white shadow-md z-20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/" className="p-1 -ml-1 hover:bg-white/10 rounded-full transition-colors">
+          <Link to="/" className="p-1 -ml-1 hover:bg-white/10 rounded-full transition-all active:scale-95">
             <ArrowLeft size={24} />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-neo-green rounded-full flex items-center justify-center border-2 border-white/20">
-               <span className="font-bold text-black text-sm">AI</span>
+            <div className="relative">
+               <img src="https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg" className="w-10 h-10 rounded-full border-2 border-neo-green object-cover" alt="AI Profile" />
+               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#202c33] rounded-full"></span>
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-base leading-tight">Kaai Assistant</span>
-              <span className="text-xs text-gray-300">Online</span>
+              <span className="text-xs text-green-400 animate-pulse">Online</span>
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-           <button onClick={() => window.location.reload()} className="p-2 hover:bg-white/10 rounded-full">
-             <RefreshCw size={20} />
-           </button>
-        </div>
+        <select 
+            value={model} 
+            onChange={(e) => setModel(e.target.value)}
+            className="bg-[#2a3942] text-white text-xs p-2 rounded border border-gray-600 outline-none focus:border-neo-green transition-all"
+        >
+             <option value="kaai-cplt">Kaai Copilot (GPT-5)</option>
+             <option value="kaai-pxd">Kaai Perplexed</option>
+             <option value="kaai-tbsk">Kaai TurboSeek</option>
+             <option value="kaai-plc">Kaai PublicAI</option>
+             <option value="kaai-qwn">Kaai Qwen</option>
+        </select>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#efeae2] bg-opacity-90 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#efeae2] bg-opacity-90 scrollbar-hide">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`
-              relative max-w-[85%] md:max-w-[65%] px-3 py-2 rounded-lg text-[15px] shadow-sm
-              ${msg.role === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}
-            `}>
+          <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
+            <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-2 rounded-lg text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
               <p className="whitespace-pre-wrap mb-3 text-[#111b21]">{msg.text}</p>
-              <span className="absolute bottom-1 right-2 text-[10px] text-gray-500 flex items-center gap-1">
-                {msg.time}
-              </span>
+              <span className="absolute bottom-1 right-2 text-[10px] text-gray-500 flex items-center gap-1">{msg.time}</span>
             </div>
           </div>
         ))}
-        
         {loading && (
           <div className="flex justify-start">
              <div className="bg-white px-4 py-3 rounded-lg rounded-tl-none shadow-sm flex items-center gap-2">
-                <span className="text-sm text-gray-500 font-medium">Sedang mengetik</span>
-                <span className="flex gap-1">
-                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
-                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
-                </span>
+                <Sparkles size={16} className="text-neo-yellow animate-spin" />
+                <span className="text-sm text-gray-500 font-medium">Kaai sedang mengetik...</span>
              </div>
           </div>
         )}
         <div ref={bottomRef} className="h-1" />
       </div>
 
-      <div className="flex-none bg-[#f0f2f5] p-2 flex items-end gap-2 z-20">
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[45px] max-h-[120px] overflow-hidden flex items-center px-4">
+      <div className="flex-none bg-[#f0f2f5] p-2 flex items-end gap-2 z-20 border-t border-gray-300">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[45px] max-h-[120px] overflow-hidden flex items-center px-4 transition-all focus-within:shadow-md">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -144,10 +111,7 @@ const AIChat = () => {
         <button 
           onClick={handleSend}
           disabled={!input.trim() || loading}
-          className={`
-            w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all
-            ${input.trim() ? 'bg-[#00a884] hover:bg-[#008f6f] active:scale-95' : 'bg-gray-300'}
-          `}
+          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all active:scale-90 ${input.trim() ? 'bg-[#00a884] hover:bg-[#008f6f]' : 'bg-gray-300'}`}
         >
           <Send color="white" size={20} className={input.trim() ? 'ml-1' : ''} />
         </button>
