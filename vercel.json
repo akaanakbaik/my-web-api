@@ -1,6 +1,16 @@
 {
-  "framework": "vite",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/:path*",
+      "destination": "https://apiai.akadev.me/api/:path*" 
+    },
+    {
+      "source": "/download/:path*",
+      "destination": "https://apiai.akadev.me/download/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
